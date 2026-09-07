@@ -22,7 +22,7 @@
 GitHub Actions 每小时第 23 分钟（UTC）检查 `jordanbaird/Ice` 的新 **Release**，包含正式版和预发布版。GitHub 的计划任务可能延迟；上游仅提交代码且尚未发布 Release 时，维持当前基线。
 
 1. 发现新发布后进行普通 Git 合并，保留汉化改动，不强推。
-2. 构建 Apple Silicon + Intel 通用版，检查编译器提取的文案、动态菜单名称、翻译占位符和包内资源。
+2. 构建 Apple Silicon + Intel 通用版，检查编译器提取的文案、动态菜单名称、翻译占位符和包内资源，并在 macOS 26 上实测签名后的主程序与图标服务连接。
 3. 检查全部通过后自动创建中文 Release，并上传 ZIP 与 SHA-256 校验文件。发布标签格式为 `<上游标签>-zh.<构建编号>`。
 4. 合并冲突时停止同步；编译失败或新增文案待翻译时停止发布。已有可用 Release 保留，Actions 内可下载 `build-reports` 查看日志与 `translation-report.json`。
 
@@ -48,6 +48,8 @@ xcodebuild -project Ice.xcodeproj -scheme Ice -configuration Release \
 # 检查新增文案并打包
 python3 scripts/localization.py audit --derived-data build/DerivedData
 bash scripts/package.sh build/DerivedData/Build/Products/Release/Ice.app dist
+# macOS 26 上验证实际 XPC 连接
+python3 scripts/check_xpc.py build/DerivedData/Build/Products/Release/Ice.app
 ```
 
 翻译词典位于 [`localization/zh-Hans.json`](../localization/zh-Hans.json)，生成的资源位于 `Ice/Resources/zh-Hans.lproj/Localizable.strings`。界面文案保持英文源键；配置枚举的原始值保持稳定。新增以普通字符串动态拼接的界面文案，应改用 `String(localized:)` 或 `LocalizedStringKey`，并按需要补充动态文案检查规则。

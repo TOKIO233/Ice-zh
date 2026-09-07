@@ -33,6 +33,12 @@ extension MenuBarItemService {
             self.logger = logger
         }
 
+        /// Exercises the real bundled XPC connection without displaying UI or requesting permissions.
+        func checkConnection() -> Bool {
+            guard case .start? = session.send(request: .start) else { return false }
+            return true
+        }
+
         /// Starts the connection.
         func start() async {
             logger.debug("Starting MenuBarItemService connection")
@@ -100,7 +106,8 @@ extension MenuBarItemService {
                     logger.warning("Session was cancelled with error \(error.localizedDescription)")
                     self.session = nil
                 }
-                session.setPeerRequirement(.isFromSameTeam())
+                let peerURL = Bundle.main.bundleURL.appendingPathComponent("Contents/XPCServices/MenuBarItemService.xpc")
+                session.setPeerRequirement(try BundledPeerRequirement.make(bundleURL: peerURL, identifier: name))
                 session.setTargetQueue(queue)
                 try session.activate()
                 self.session = session

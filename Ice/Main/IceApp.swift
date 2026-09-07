@@ -5,7 +5,6 @@
 
 import SwiftUI
 
-@main
 struct IceApp: App {
     @NSApplicationDelegateAdaptor var appDelegate: AppDelegate
 

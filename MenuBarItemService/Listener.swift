@@ -43,11 +43,12 @@ final class Listener {
     }
 
     /// Activates the listener without checking if it is already active,
-    /// with the requirement that session peers must be signed with the
-    /// same team identifier as the service process.
+    /// accepting only the main executable shipped in this application bundle.
     @available(macOS 26.0, *)
-    private func uncheckedActivateWithSameTeamRequirement() throws {
-        listener = try XPCListener(service: name, requirement: .isFromSameTeam()) { [weak self] request in
+    private func uncheckedActivateWithBundledPeerRequirement() throws {
+        let appURL = Bundle.main.bundleURL.deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
+        let requirement = try BundledPeerRequirement.make(bundleURL: appURL, identifier: "com.tokio233.Ice.zh")
+        listener = try XPCListener(service: name, requirement: requirement) { [weak self] request in
             request.accept { message in
                 self?.handleMessage(message)
             }
@@ -74,7 +75,7 @@ final class Listener {
 
         do {
             if #available(macOS 26.0, *) {
-                try uncheckedActivateWithSameTeamRequirement()
+                try uncheckedActivateWithBundledPeerRequirement()
             } else {
                 try uncheckedActivate()
             }

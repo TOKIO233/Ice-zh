@@ -43,7 +43,7 @@ jobs:
   build:
     needs: sync
     if: needs.sync.outputs.build == 'true'
-    runs-on: macos-15
+    runs-on: macos-26
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
@@ -78,6 +78,8 @@ jobs:
         run: python3 scripts/localization.py audit --derived-data build/DerivedData
       - name: 签名并打包
         run: bash scripts/package.sh build/DerivedData/Build/Products/Release/Ice.app dist
+      - name: 验证主程序与图标服务连接
+        run: python3 scripts/check_xpc.py build/DerivedData/Build/Products/Release/Ice.app
       - name: 保存可下载构建
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
@@ -119,7 +121,7 @@ jobs:
           Ice 简体中文社区版，基于上游 ${UPSTREAM_TAG}。
 
           - 支持 Apple Silicon 和 Intel，macOS 14 及以上。
-          - 通过通用架构构建、语言资源和占位符检查。
+          - 通过通用架构构建、语言资源、占位符检查及 macOS 26 真实 XPC 连接测试。
           - 本包采用 ad-hoc 签名，尚未取得 Apple Developer ID 签名与公证；macOS 可能拦截首次打开。
           - 独立应用标识，不继承官方版授权。安装后需要为本版单独授权辅助功能及屏幕录制。
           - 应用内更新入口指向本仓库，下载替换方式更新。
