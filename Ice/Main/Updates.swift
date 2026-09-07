@@ -20,7 +20,7 @@ final class UpdatesManager: NSObject, ObservableObject {
 
     /// The underlying updater controller.
     private(set) lazy var updaterController = SPUStandardUpdaterController(
-        startingUpdater: true,
+        startingUpdater: false,
         updaterDelegate: self,
         userDriverDelegate: self
     )
@@ -55,8 +55,8 @@ final class UpdatesManager: NSObject, ObservableObject {
     /// Performs the initial setup of the manager.
     func performSetup(with appState: AppState) {
         self.appState = appState
-        _ = updaterController
-        configureCancellables()
+        // Community builds use the fork release page, preserving the Chinese edition.
+        canCheckForUpdates = true
     }
 
     /// Configures the internal observers for the manager.
@@ -69,20 +69,8 @@ final class UpdatesManager: NSObject, ObservableObject {
 
     /// Checks for app updates.
     @objc func checkForUpdates() {
-        #if DEBUG
-        // Checking for updates hangs in debug mode.
-        let alert = NSAlert()
-        alert.messageText = "Checking for updates is not supported in debug mode."
-        alert.runModal()
-        #else
-        guard let appState else {
-            return
-        }
-        // Activate the app in case an alert needs to be displayed.
-        appState.activate(withPolicy: .regular)
-        appState.openWindow(.settings)
-        updater.checkForUpdates()
-        #endif
+        guard let url = URL(string: "https://github.com/TOKIO233/Ice-zh/releases") else { return }
+        NSWorkspace.shared.open(url)
     }
 }
 

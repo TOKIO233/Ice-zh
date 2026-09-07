@@ -1,3 +1,7 @@
 .DS_Store
 build/
 xcuserdata/
+
+# 汉化构建和 Python 校验缓存
+__pycache__/
+dist/

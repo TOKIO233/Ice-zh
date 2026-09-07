@@ -130,7 +130,7 @@ struct PermissionsView: View {
     private func permissionBox(_ permission: Permission) -> some View {
         IceSection {
             VStack(spacing: 12) {
-                Text(permission.title)
+                Text(LocalizedStringKey(permission.title))
                     .font(.title.weight(.medium))
                     .underline()
 
@@ -143,7 +143,7 @@ struct PermissionsView: View {
                         ForEach(permission.details, id: \.self) { detail in
                             HStack {
                                 Text("•").bold()
-                                Text(detail).fontWeight(.medium)
+                                Text(LocalizedStringKey(detail)).fontWeight(.medium)
                             }
                         }
                     }

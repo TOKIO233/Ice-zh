@@ -1,0 +1,136 @@
+name: 同步上游并发布汉化版
+
+on:
+  schedule:
+    - cron: '23 * * * *'
+  workflow_dispatch:
+  push:
+    branches: [zh-CN]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ice-chinese-release
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    if: github.repository == 'TOKIO233/Ice-zh'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      build: ${{ steps.sync.outputs.build }}
+      sha: ${{ steps.sync.outputs.sha }}
+      tag: ${{ steps.sync.outputs.tag }}
+      prerelease: ${{ steps.sync.outputs.prerelease }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: zh-CN
+          fetch-depth: 0
+      - name: 设置机器人提交身份
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+      - name: 检查上游发布并保留汉化改动
+        id: sync
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 scripts/sync_upstream.py
+
+  build:
+    needs: sync
+    if: needs.sync.outputs.build == 'true'
+    runs-on: macos-15
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ needs.sync.outputs.sha }}
+          persist-credentials: false
+      - name: 选择 Xcode 26
+        run: |
+          python3 - <<'PY'
+          import os, re
+          from pathlib import Path
+          apps = list(Path('/Applications').glob('Xcode_26*.app'))
+          if not apps:
+              raise SystemExit('此 runner 未安装 Xcode 26，请更新 runner 镜像。')
+          app = max(apps, key=lambda p: tuple(map(int, re.findall(r'\d+', p.name))))
+          with open(os.environ['GITHUB_ENV'], 'a') as f:
+              f.write(f'DEVELOPER_DIR={app}/Contents/Developer\n')
+          PY
+      - name: 检查资源和自动化测试
+        run: |
+          python3 scripts/localization.py check
+          python3 -m unittest discover -s tests -v
+      - name: 构建通用版
+        run: |
+          set -o pipefail
+          mkdir -p build
+          xcodebuild -project Ice.xcodeproj -scheme Ice -configuration Release \
+            -derivedDataPath build/DerivedData CODE_SIGNING_ALLOWED=NO \
+            ONLY_ACTIVE_ARCH=NO 'ARCHS=arm64 x86_64' SWIFT_EMIT_LOC_STRINGS=YES \
+            build 2>&1 | tee build/xcodebuild.log
+      - name: 校验新增文案
+        run: python3 scripts/localization.py audit --derived-data build/DerivedData
+      - name: 签名并打包
+        run: bash scripts/package.sh build/DerivedData/Build/Products/Release/Ice.app dist
+      - name: 保存可下载构建
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: Ice-zh-universal
+          path: dist/
+          if-no-files-found: error
+      - name: 保存构建日志与待翻译清单
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: build-reports
+          path: |
+            build/translation-report.json
+            build/xcodebuild.log
+          if-no-files-found: ignore
+
+  release:
+    needs: [sync, build]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: Ice-zh-universal
+          path: dist
+      - name: 发布汉化版本
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          SOURCE_SHA: ${{ needs.sync.outputs.sha }}
+          UPSTREAM_TAG: ${{ needs.sync.outputs.tag }}
+          UPSTREAM_PRERELEASE: ${{ needs.sync.outputs.prerelease }}
+          RELEASE_NUMBER: ${{ github.run_number }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          tag="${UPSTREAM_TAG}-zh.${RELEASE_NUMBER}"
+          cat > notes.md <<EOF
+          Ice 简体中文社区版，基于上游 ${UPSTREAM_TAG}。
+
+          - 支持 Apple Silicon 和 Intel，macOS 14 及以上。
+          - 通过通用架构构建、语言资源和占位符检查。
+          - 本包采用 ad-hoc 签名，尚未取得 Apple Developer ID 签名与公证；macOS 可能拦截首次打开。
+          - 独立应用标识，不继承官方版授权。安装后需要为本版单独授权辅助功能及屏幕录制。
+          - 应用内更新入口指向本仓库，下载替换方式更新。
+
+          源码提交：${SOURCE_SHA}
+          构建记录：${RUN_URL}
+          EOF
+          flags=()
+          if [ "$UPSTREAM_PRERELEASE" = true ]; then flags+=(--prerelease); fi
+          # 重跑同一次工作流时保留已发布的不可变产物。
+          if gh release view "$tag" >/dev/null 2>&1; then exit 0; fi
+          gh release create "$tag" dist/Ice-zh-universal.zip dist/SHA256SUMS.txt \
+            --target "$SOURCE_SHA" --title "Ice ${UPSTREAM_TAG} 简体中文版（构建 ${RELEASE_NUMBER}）" \
+            --notes-file notes.md "${flags[@]}"
