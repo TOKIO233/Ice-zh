@@ -62,7 +62,7 @@ enum ScreenCapture {
     // MARK: Capture Window(s)
 
     /// Queue for screen capture operations.
-    private static let captureQueue = DispatchQueue(label: "ScreenCapture.captureQueue", qos: .userInteractive)
+    private static let captureQueue = BoundedCaptureQueue()
 
     /// Captures a composite image of an array of windows.
     ///
@@ -75,12 +75,15 @@ enum ScreenCapture {
     ///     capture the minimum rectangle that encloses the windows.
     ///   - option: Options that specify which parts of the windows are captured.
     static func captureWindows(with windowIDs: [CGWindowID], screenBounds: CGRect? = nil, option: CGWindowImageOption = []) -> CGImage? {
-        guard let array = Bridging.createCGWindowArray(with: windowIDs) else {
-            return nil
-        }
         let bounds = screenBounds ?? .null
-        return captureQueue.sync {
-            CGImage.createWindowListImageFromArray(screenBounds: bounds, windowArray: array, imageOption: option)
+        // Color sampling also calls this on the main thread. Keep it within a
+        // frame budget; existing images/colors remain cached when capture stalls.
+        let timeout: DispatchTimeInterval = .milliseconds(Thread.isMainThread ? 16 : 250)
+        return captureQueue.perform(timeout: timeout) {
+            guard let array = Bridging.createCGWindowArray(with: windowIDs) else {
+                return nil
+            }
+            return CGImage.createWindowListImageFromArray(screenBounds: bounds, windowArray: array, imageOption: option)
         }
     }
 

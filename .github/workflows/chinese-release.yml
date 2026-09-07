@@ -66,6 +66,8 @@ jobs:
         run: |
           python3 scripts/localization.py check
           python3 -m unittest discover -s tests -v
+          swiftc Ice/Utilities/BoundedCaptureQueue.swift tests/CaptureQueueTests.swift -o /tmp/ice-capture-tests
+          /tmp/ice-capture-tests
       - name: 构建通用版
         run: |
           set -o pipefail

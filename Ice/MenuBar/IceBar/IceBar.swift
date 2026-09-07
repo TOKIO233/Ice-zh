@@ -19,6 +19,8 @@ final class IceBarPanel: NSPanel {
     /// The currently displayed section.
     private(set) var currentSection: MenuBarSection.Name?
 
+    private var presentationGeneration = 0
+
     /// Storage for internal observers.
     private var cancellables = Set<AnyCancellable>()
 
@@ -159,7 +161,7 @@ final class IceBarPanel: NSPanel {
     /// Shows the panel on the given screen, displaying the given
     /// menu bar section.
     func show(section: MenuBarSection.Name, on screen: NSScreen) async {
-        guard let appState else {
+        guard let appState, currentSection != section else {
             return
         }
 
@@ -167,6 +169,8 @@ final class IceBarPanel: NSPanel {
         // before updating the caches.
         appState.navigationState.isIceBarPresented = true
         currentSection = section
+        presentationGeneration += 1
+        let generation = presentationGeneration
 
         let cacheTask = Task(timeout: .seconds(1)) {
             await appState.itemManager.cacheItemsIfNeeded()
@@ -178,6 +182,9 @@ final class IceBarPanel: NSPanel {
         } catch {
             Logger.default.error("Cache update failed when showing IceBarPanel - \(error)")
         }
+
+        // A hide or newer show may have occurred while capture was suspended.
+        guard generation == presentationGeneration, currentSection == section else { return }
 
         contentView = IceBarHostingView(
             appState: appState,
@@ -211,6 +218,7 @@ final class IceBarPanel: NSPanel {
     }
 
     override func close() {
+        presentationGeneration += 1
         super.close()
         contentView = nil
         currentSection = nil
