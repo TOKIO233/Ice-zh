@@ -172,15 +172,20 @@ final class IceBarPanel: NSPanel {
         presentationGeneration += 1
         let generation = presentationGeneration
 
+        let needsInitialImages = appState.imageCache.cacheFailed(for: section)
         let cacheTask = Task(timeout: .seconds(1)) {
             await appState.itemManager.cacheItemsIfNeeded()
             await appState.imageCache.updateCache()
         }
 
-        do {
-            try await cacheTask.value
-        } catch {
-            Logger.default.error("Cache update failed when showing IceBarPanel - \(error)")
+        // Reopening uses existing images immediately. Published image updates
+        // refresh the visible panel when the background capture completes.
+        if needsInitialImages {
+            do {
+                try await cacheTask.value
+            } catch {
+                Logger.default.error("Cache update failed when showing IceBarPanel - \(error)")
+            }
         }
 
         // A hide or newer show may have occurred while capture was suspended.
