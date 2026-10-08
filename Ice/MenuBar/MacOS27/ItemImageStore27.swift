@@ -376,8 +376,10 @@ final class ItemImageStore27 {
                 keyed[index + channel] = UInt8((Double(keyed[index + channel]) * opacity).rounded())
             }
         }
-        keyed.withUnsafeMutableBytes { buffer in
-            bytes.update(from: buffer.bindMemory(to: UInt8.self).baseAddress!, count: count)
+        keyed.withUnsafeBufferPointer { buffer in
+            if let source = buffer.baseAddress {
+                bytes.update(from: source, count: count)
+            }
         }
         guard
             let keyedImage = context.makeImage(),
