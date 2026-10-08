@@ -44,13 +44,15 @@ enum CaptureIndicator27 {
     ///   - leftEdgeOfItems: The left edge of the leftmost item drawn on that bar.
     ///   - width: How wide to draw the indicator.
     ///   - gap: How much room to leave between it and the items.
+    ///   - iceIconWidth: Space reserved for Ice's own icon, which has no usable frame on macOS 27.
     static func frame(
         barFrame: CGRect,
         leftEdgeOfItems: CGFloat?,
         width: CGFloat,
-        gap: CGFloat
+        gap: CGFloat,
+        iceIconWidth: CGFloat = 0
     ) -> CGRect {
-        let right = (leftEdgeOfItems ?? barFrame.maxX) - gap
+        let right = (leftEdgeOfItems ?? barFrame.maxX) - gap - iceIconWidth
         let x = max(barFrame.minX, right - width)
         return CGRect(x: x, y: barFrame.minY, width: width, height: barFrame.height)
     }

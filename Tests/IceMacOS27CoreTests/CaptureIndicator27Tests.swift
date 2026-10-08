@@ -28,6 +28,15 @@ struct CaptureIndicator27Tests {
         #expect(frame == CGRect(x: 1360, y: 1050, width: 34, height: 30))
     }
 
+    @Test("The indicator leaves room for Ice's own icon")
+    func besideTheIceIcon() {
+        let frame = CaptureIndicator27.frame(
+            barFrame: bar, leftEdgeOfItems: 1400, width: 34, gap: 6, iceIconWidth: 30
+        )
+        #expect(frame.maxX == 1364)
+        #expect(frame.minX == 1330)
+    }
+
     @Test("A bar with no items keeps it at the right end")
     func noItems() {
         let frame = CaptureIndicator27.frame(barFrame: bar, leftEdgeOfItems: nil, width: 34, gap: 6)

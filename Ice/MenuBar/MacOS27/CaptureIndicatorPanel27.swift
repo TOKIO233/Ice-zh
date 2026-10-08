@@ -33,6 +33,9 @@ final class CaptureIndicatorPanel27: NSPanel {
     /// How much room is left between it and the items beside it.
     private static let gap: CGFloat = 6
 
+    /// Ice's icon is absent from the reliable item frames on macOS 27.
+    private static let iceIconWidth: CGFloat = 30
+
     private static let frameLock = NSLock()
     nonisolated(unsafe) private static var shownFrame: CGRect?
 
@@ -115,7 +118,8 @@ final class CaptureIndicatorPanel27: NSPanel {
             barFrame: barFrame,
             leftEdgeOfItems: MenuBarItemProvider27.leftEdge(for: screen.displayID),
             width: Self.width,
-            gap: Self.gap
+            gap: Self.gap,
+            iceIconWidth: appState.settings.general.showIceIcon ? Self.iceIconWidth : 0
         )
         let view = CaptureIndicatorView(kind: kind) { [weak self] in
             self?.openCaptureControls()

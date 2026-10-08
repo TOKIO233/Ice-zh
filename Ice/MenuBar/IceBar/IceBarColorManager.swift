@@ -170,11 +170,8 @@ final class IceBarColorManager: ObservableObject {
     /// disagree. A flat colour that follows the system appearance always agrees with the
     /// glyphs, which the capture takes in that same appearance.
     static func flatColor27() -> CGColor {
-        var color = NSColor.windowBackgroundColor
-        NSApp.effectiveAppearance.performAsCurrentDrawingAppearance {
-            color = NSColor.windowBackgroundColor.usingColorSpace(.sRGB) ?? color
-        }
-        return color.cgColor
+        let isDark = NSApp.effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
+        return NSColor(calibratedWhite: isDark ? 0.25 : 0.92, alpha: 1).cgColor
     }
 
     /// Sets the flat macOS 27 colour.

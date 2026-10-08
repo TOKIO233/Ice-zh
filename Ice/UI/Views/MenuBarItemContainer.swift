@@ -63,7 +63,7 @@ struct MenuBarItemContainer<Content: View>: View {
 
     @ViewBuilder
     private var contentBackground: some View {
-        if appState.activeSpace.isFullscreen {
+        if #unavailable(macOS 27.0), appState.activeSpace.isFullscreen {
             Color.black
         } else if let colorInfo {
             Color(cgColor: colorInfo.color)
