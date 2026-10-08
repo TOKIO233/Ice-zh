@@ -91,6 +91,7 @@
 "Location" = "显示位置";
 "Make more room in the menu bar by hiding the current app menus if needed. macOS requires Ice to make itself visible in the Dock while this setting is in effect." = "需要时隐藏当前应用菜单，为图标腾出空间。受 macOS 限制，此功能生效时 Ice 会显示在程序坞中。";
 "Menu Bar Appearance" = "菜单栏外观";
+"Menu Bar Indicators" = "菜单栏状态指示";
 "Menu Bar Items" = "菜单栏图标";
 "Menu Bar Layout" = "菜单栏布局";
 "Menu Bar Sections" = "菜单栏分区";
@@ -118,6 +119,7 @@
 "Quit" = "退出";
 "Quit Ice" = "退出 Ice";
 "Record Hotkey" = "录制快捷键";
+"Relaunch %@" = "重新启动%@";
 "Report a Bug" = "反馈问题";
 "Reset" = "重置";
 "Reset Menu Bar Appearance" = "重置菜单栏外观";
@@ -134,6 +136,7 @@
 "Shape Kind" = "形状类型";
 "Show %@ Section" = "展开%@";
 "Show Ice icon" = "显示 Ice 图标";
+"Show a camera and microphone indicator" = "显示摄像头和麦克风使用指示";
 "Show all sections when ⌘ Command + dragging menu bar items" = "按住 ⌘ Command 拖动图标时显示所有分区";
 "Show hidden menu bar items in a separate bar below the menu bar." = "在菜单栏下方的独立面板中显示隐藏的图标。";
 "Show on click" = "点击时展开";
@@ -142,6 +145,7 @@
 "Show on scroll" = "滚动时展开";
 "Smart" = "智能";
 "Solid" = "纯色";
+"Some items are folded away on the built-in display." = "部分图标已收进内建显示屏的折叠菜单。";
 "Split" = "分段";
 "Square Cap" = "直角";
 "Strategy" = "收起方式";
@@ -154,6 +158,8 @@
 "The Ice Bar's location changes based on context." = "展开面板会根据操作位置自动定位。";
 "The amount of time to wait before hiding temporarily shown menu bar items." = "临时显示的图标在多久后自动收起。";
 "The amount of time to wait before showing on hover." = "鼠标悬停多久后展开图标。";
+"The camera is in use" = "摄像头正在使用";
+"The microphone is in use" = "麦克风正在使用";
 "This action cannot be undone." = "此操作无法撤销。";
 "Timed" = "定时";
 "Tint" = "着色";
@@ -171,7 +177,10 @@
 "Visible" = "常驻区";
 "default" = "默认";
 "left click" = "左键点击";
+"macOS draws none of its own while Ice is hiding items. Click Ice's to open Control Centre." = "Ice 隐藏图标时，macOS 不显示自己的摄像头和麦克风指示。点击 Ice 的指示可打开控制中心。";
+"macOS orders the items within each section." = "macOS 决定各分区内图标的排列顺序。";
 "macOS prohibits \"%@\" from being moved." = "macOS 禁止移动“%@”。";
+"macOS stopped laying them out when Ice freed the space beside the notch, and left no control to reach them. Relaunching the application whose item is missing brings it back." = "Ice 腾出刘海旁的空间后，macOS 停止排列这些图标，且没有留下打开它们的入口。重新启动缺失图标所属的应用，可让图标恢复显示。";
 "max" = "最大";
 "none" = "无";
 "right click" = "右键点击";
